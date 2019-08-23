@@ -11,11 +11,14 @@ const SpotifyWebApi = require('spotify-web-api-node');
 const spotifyApi = new SpotifyWebApi({
   clientId: process.env.SPOTIFY_CLIENT_ID,
   clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
-  redirectUri: 'https://localhost:3000'
+  redirectUri: 'https://localhost:3000/callback'
 });
 
 // spotifyApi.setAccessToken();
-
+let redirect_uri = 
+  process.env.REDIRECT_URI || 
+  'http://localhost:3000/callback'
+  
 router.get('/', loadHome)
 router.get('/login', oauth)
 router.get('/callback', getToken)
@@ -25,43 +28,41 @@ function loadHome(req, res, next) {
   res.status(200).send('welcome');
 }
 
-function getToken(req, resp) {
-  resp.header('Access-Control-Allow-Origin', '*');
-  resp.header('Access-Control-Allow-Headers', 'X-Requested-With');
-  var client_id = process.env.SPOTIFY_CLIENT_ID;
-  var client_secret = process.env.SPOTIFY_CLIENT_SECRET;
-  // your application requests authorization
-  var authOptions = {
+function getToken(req, res) {
+  let code = req.query.code || null
+  let authOptions = {
     url: 'https://accounts.spotify.com/api/token',
-    headers: {
-      Authorization:
-        'Basic ' +
-        new Buffer(client_id + ':' + client_secret).toString('base64')
-    },
     form: {
-      grant_type: 'client_credentials'
+      code: code,
+      redirect_uri,
+      grant_type: 'authorization_code'
+    },
+    headers: {
+      'Authorization': 'Basic ' + (new Buffer(
+        process.env.SPOTIFY_CLIENT_ID + ':' + process.env.SPOTIFY_CLIENT_SECRET
+      ).toString('base64'))
     },
     json: true
-  };
+  }
   request.post(authOptions, function(error, response, body) {
-    if (!error && response.statusCode === 200) {
-      resp.json({ token: body.access_token });
-    }
-  });
+    let access_token = body.access_token
+    let uri = process.env.FRONTEND_URI || 'http://localhost:3000/'
+    res.redirect(uri + '?access_token=' + access_token)
+  })
 }
 
 function oauth(req, res, next) {
 
-  const clientId = process.env.SPOTIFY_CLIENT_ID;
-  const redirectUri = 'http://localhost:3000/callback'
+  const client_id = process.env.SPOTIFY_CLIENT_ID;
+  const redirect_uri = 'http://localhost:3000/callback'
 
   const scope = 'user-read-private user-read-email user-read-currently-playing user-read-playback-state';
   res.redirect('https://accounts.spotify.com/authorize?' +
     querystring.stringify({
       response_type: 'code',
-      client_id: clientId,
+      client_id: client_id,
       scope: scope,
-      redirect_uri: redirectUri,
+      redirect_uri: redirect_uri,
     }))
 };
 
