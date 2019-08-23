@@ -1,4 +1,5 @@
 'use strict';
+
 require('dotenv').config();
 
 const request = require('request');
@@ -15,17 +16,26 @@ const spotifyApi = new SpotifyWebApi({
 });
 
 // spotifyApi.setAccessToken();
-let redirect_uri = 
-  process.env.REDIRECT_URI || 
-  'http://localhost:3000/callback'
-  
-router.get('/', loadHome)
-router.get('/login', oauth)
-router.get('/callback', getToken)
+let redirect_uri = process.env.REDIRECT_URI || 'http://localhost:3000/callback'
+
+router.get('/', loadHome);
+router.get('/login', oauth);
+router.get('/callback', getToken);
 router.get('/nowplaying', getCurrentlyPlaying);
 
+let access_token = '';
+
 function loadHome(req, res, next) {
-  res.status(200).send('welcome');
+
+  const spotifyApi = new SpotifyWebApi({
+    accessToken: access_token,
+  });
+
+  return spotifyApi.getMe()
+    .then(me => {
+      res.status(200).send(me.body);
+    })
+    .catch(console.error)
 }
 
 function getToken(req, res) {
@@ -44,8 +54,8 @@ function getToken(req, res) {
     },
     json: true
   }
-  request.post(authOptions, function(error, response, body) {
-    let access_token = body.access_token
+  request.post(authOptions, function (error, response, body) {
+    access_token = body.access_token
     let uri = process.env.FRONTEND_URI || 'http://localhost:3000/'
     res.redirect(uri + '?access_token=' + access_token)
   })
@@ -67,17 +77,43 @@ function oauth(req, res, next) {
 };
 
 function getCurrentlyPlaying(req, res, next) {
+  const spotifyApi = new SpotifyWebApi({
+    accessToken: 'BQBc-Nl9wyuiNIx9L1ZjlEhO4E7MFJEd3SAFije3oVGjAO87eJAfp_yA-yjepFoAB-Mqv92VB_P0BWyhxhwQEb-rIw3UI0aP7mBeUycUG8ikmDY1NpPDXiOaCgGFGrJmJk1ctZFHm3zpMCm3_c5XEU1n8RCSs_w3GNCfDnWXpzE120kYyBxnlampFg',
+  });
+
   return spotifyApi.getMyCurrentPlayingTrack()
     .then(data => {
-      console.log('req', req.query.code)
       let id = data.body.item.id;
+      console.log('track name', data.body.item.name)
       return spotifyApi.getAudioFeaturesForTrack(id)
     }).then(data => {
-      console.log('valence', data.body.valence);
-      res.status(200).send(data.body.valence);
+      let valence =  { mood_score: data.body.valence }
+      res.status(200).send(valence);
+      console.log('res', res)
+      console.log('mood score', data.body.valence);
     }).catch(err => {
       console.log(err);
     })
 }
+
+// const requestLoop = setInterval( function() {
+//   request({
+//       url: "localhost:3000/nowplaying",
+//       method: "GET",
+//       timeout: 10000,
+//       followRedirect: true,
+//       maxRedirects: 10
+//   },function(error, res, body){
+//     console.log('in the function', this)
+//       if(!error && res.statusCode == 200){
+//           console.log('success!');
+//       }else{
+//           console.log('error' + res.statusCode);
+//       }
+//   });
+// }, 5000);
+
+
+// setInterval(getCurrentlyPlaying, 5000);
 
 module.exports = router;
