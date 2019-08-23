@@ -77,6 +77,13 @@ function oauth(req, res, next) {
 };
 
 function getCurrentlyPlaying(req, res, next) {
+  getMood()
+  .then(mood => {
+    res.status(200).send(mood);
+  })
+
+}
+const getMood = function () {
   const spotifyApi = new SpotifyWebApi({
     accessToken: 'BQBc-Nl9wyuiNIx9L1ZjlEhO4E7MFJEd3SAFije3oVGjAO87eJAfp_yA-yjepFoAB-Mqv92VB_P0BWyhxhwQEb-rIw3UI0aP7mBeUycUG8ikmDY1NpPDXiOaCgGFGrJmJk1ctZFHm3zpMCm3_c5XEU1n8RCSs_w3GNCfDnWXpzE120kYyBxnlampFg',
   });
@@ -88,32 +95,13 @@ function getCurrentlyPlaying(req, res, next) {
       return spotifyApi.getAudioFeaturesForTrack(id)
     }).then(data => {
       let valence =  { mood_score: data.body.valence }
-      res.status(200).send(valence);
-      console.log('res', res)
-      console.log('mood score', data.body.valence);
+      console.log('mood score', valence);
+      return valence;
     }).catch(err => {
       console.log(err);
     })
 }
 
-// const requestLoop = setInterval( function() {
-//   request({
-//       url: "localhost:3000/nowplaying",
-//       method: "GET",
-//       timeout: 10000,
-//       followRedirect: true,
-//       maxRedirects: 10
-//   },function(error, res, body){
-//     console.log('in the function', this)
-//       if(!error && res.statusCode == 200){
-//           console.log('success!');
-//       }else{
-//           console.log('error' + res.statusCode);
-//       }
-//   });
-// }, 5000);
-
-
-// setInterval(getCurrentlyPlaying, 5000);
+// setInterval(getMood, 5000);
 
 module.exports = router;
