@@ -1,8 +1,8 @@
-# audio-color
+# Code Fellows - Code 401 Midtern Project
 
-## Project Name
+## Audio-Color
 
-### Author: Student/Group Name
+### Authors: Adrienne Easton, Alvian Joseph, Jeremy Lee, Brad Smialek
 
 ### Links and Resources
 * [submission PR](http://xyz.com)
