@@ -8,6 +8,7 @@ const router = express.Router();
 const querystring = require('querystring');
 
 const SpotifyWebApi = require('spotify-web-api-node');
+const moodApp = require('../app.js');
 
 const spotifyApi = new SpotifyWebApi({
   clientId: process.env.SPOTIFY_CLIENT_ID,
@@ -22,6 +23,7 @@ router.get('/', loadHome);
 router.get('/login', oauth);
 router.get('/callback', getToken);
 router.get('/nowplaying', getCurrentlyPlaying);
+router.get('/colorize', colorize);
 
 let access_token = '';
 
@@ -36,7 +38,7 @@ function loadHome(req, res, next) {
       res.status(200).send(me.body);
     })
     .catch(console.error)
-}
+};
 
 function getToken(req, res) {
   let code = req.query.code || null
@@ -59,10 +61,9 @@ function getToken(req, res) {
     let uri = process.env.FRONTEND_URI || 'http://localhost:3000/'
     res.redirect(uri + '?access_token=' + access_token)
   })
-}
+};
 
 function oauth(req, res, next) {
-
   const client_id = process.env.SPOTIFY_CLIENT_ID;
   const redirect_uri = 'http://localhost:3000/callback'
 
@@ -78,14 +79,23 @@ function oauth(req, res, next) {
 
 function getCurrentlyPlaying(req, res, next) {
   getMood()
-  .then(mood => {
-    res.status(200).send(mood);
-  })
+    .then(mood => {
+      let moodObj = { mood: mood }
+      res.status(200).send(moodObj);
+    })
+};
 
-}
+function colorize(req, res) {
+  return getMood()
+    .then(mood => {
+      let colorSet = moodApp.convertMoodToRGB(mood)
+      res.status(200).send(colorSet)
+    })
+};
+
 const getMood = function () {
   const spotifyApi = new SpotifyWebApi({
-    accessToken: 'BQBc-Nl9wyuiNIx9L1ZjlEhO4E7MFJEd3SAFije3oVGjAO87eJAfp_yA-yjepFoAB-Mqv92VB_P0BWyhxhwQEb-rIw3UI0aP7mBeUycUG8ikmDY1NpPDXiOaCgGFGrJmJk1ctZFHm3zpMCm3_c5XEU1n8RCSs_w3GNCfDnWXpzE120kYyBxnlampFg',
+    accessToken: 'BQDTmprkGzeyj1OkhKSooKuoPxGEP-Bp3GDUFFBBfenLK7xjW5Lcf1_D8QFrdTpmFruRmhhXujZYJSy27SDwOMISOJAmWsttPe3s7G8-ydaUlHZ4aQ1qu93vdvBTMqtkCJhihjrJglkvM83bdJ__Y4Bm7_3muOKq2PKFYz7MUHf1ufgxFV6Tj-NJ7A',
   });
 
   return spotifyApi.getMyCurrentPlayingTrack()
@@ -94,13 +104,14 @@ const getMood = function () {
       console.log('track name', data.body.item.name)
       return spotifyApi.getAudioFeaturesForTrack(id)
     }).then(data => {
-      let valence =  { mood_score: data.body.valence }
+      let valence = Math.round((data.body.valence * 10));
       console.log('mood score', valence);
       return valence;
     }).catch(err => {
       console.log(err);
     })
-}
+};
+
 
 // setInterval(getMood, 5000);
 
