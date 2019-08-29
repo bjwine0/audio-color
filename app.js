@@ -1,4 +1,5 @@
 'use strict';
+const rgb = require('./rgb.js');
 
 const range = (start, end) => {
   const length = end - start;
@@ -24,16 +25,16 @@ const convertMoodToRGB = (valence) => {
   let groupThree = range(7, 11);
 
   if (groupOne.includes(valence)) {
-    console.log('dark blue, purple, grey');
-    return 'dark blue, purple, grey';
+    console.log('group one');
+    rgb.rgbOne()
   }
   if (groupTwo.includes(valence)) {
-    console.log('orange, green, yellow');
-    return 'orange, green, yellow';
+    console.log('group two');
+    rgb.rgbTwo()
   }
   if (groupThree.includes(valence)) {
-    console.log('pink, light blue, red');
-    return 'pink, light blue, red';
+    console.log('group three');
+    rgb.rgbThree()
   }
 };
 
