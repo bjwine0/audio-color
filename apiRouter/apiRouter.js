@@ -1,10 +1,12 @@
 'use strict';
 
 require('dotenv').config();
+
 const request = require('request');
 const express = require('express');
 const router = express.Router();
 const querystring = require('querystring');
+
 const SpotifyWebApi = require('spotify-web-api-node');
 const moodApp = require('../app.js');
 
@@ -13,8 +15,10 @@ const spotifyApi = new SpotifyWebApi({
   clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
   redirectUri: 'https://localhost:3000/callback'
 });
+
 // spotifyApi.setAccessToken();
 let redirect_uri = process.env.REDIRECT_URI || 'http://localhost:3000/callback'
+
 router.get('/', loadHome);
 router.get('/login', oauth);
 router.get('/callback', getToken);
@@ -58,10 +62,11 @@ function getToken(req, res) {
     res.redirect(uri + '?access_token=' + access_token)
   })
 };
-
+​
 function oauth(req, res, next) {
   const client_id = process.env.SPOTIFY_CLIENT_ID;
   const redirect_uri = 'http://localhost:3000/callback'
+
   const scope = 'user-read-private user-read-email user-read-currently-playing user-read-playback-state';
   res.redirect('https://accounts.spotify.com/authorize?' +
     querystring.stringify({
@@ -71,6 +76,7 @@ function oauth(req, res, next) {
       redirect_uri: redirect_uri,
     }))
 };
+
 function getCurrentlyPlaying(req, res, next) {
   getMood()
     .then(mood => {
@@ -82,7 +88,7 @@ function getCurrentlyPlaying(req, res, next) {
 function colorize(req, res) {
   return getMood()
     .then(mood => {
-      let colorSet = moodApp.convertMoodToRGB(mood)
+      let colorSet = moodApp.convertMoodToRGB(x)
       res.status(200).send(colorSet)
     })
 };
@@ -105,7 +111,6 @@ const getMood = function () {
       console.log(err);
     })
 };
-
 
 // setInterval(getMood, 5000);
 
